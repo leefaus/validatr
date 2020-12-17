@@ -1,0 +1,9 @@
+{
+  "sync": {
+    "groups": [
+      "admin",
+      "marketing"
+    ],
+    "user": "bob"
+  }
+}

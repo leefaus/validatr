@@ -1,0 +1,43 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/open-policy-agent/opa/rego"
+	"io/ioutil"
+	"strconv"
+)
+
+var regoFile, regoErr = ioutil.ReadFile("authz.rego")
+var inputFile, inputErr = ioutil.ReadFile("authz.json")
+
+func authz() bool {
+	ctx := context.TODO()
+	query, err := rego.New(
+		rego.Query("result := data.example.authz.allow"),
+		rego.Module("example.rego", string(regoFile)),
+	).PrepareForEval(ctx)
+
+	if err != nil {
+		// Handle error.
+	}
+
+	var dat map[string]interface{}
+	json.Unmarshal(inputFile, &dat)
+
+
+	results, err := query.Eval(ctx, rego.EvalInput(dat))
+
+	if err != nil {
+		fmt.Errorf(err.Error())
+	} else if len(results) == 0 {
+		fmt.Println("results were 0")
+	} else if result, ok := results[0].Bindings["result"].(bool); !ok {
+		fmt.Sprintf("results were of unexpected type: %s", strconv.FormatBool(result))
+	} else {
+		// Handle result/decision.
+		return results[0].Bindings["result"].(bool)
+	}
+	return false
+}
